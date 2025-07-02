@@ -36,6 +36,8 @@ if "show_popup" not in st.session_state:
     st.session_state.show_popup = False
 if "selected_gift" not in st.session_state:
     st.session_state.selected_gift = None
+if "user_name" not in st.session_state:
+    st.session_state.user_name = ""
 
 # Загружаем текущие выбранные подарки
 chosen_gifts = load_data()
@@ -44,21 +46,26 @@ chosen_gifts = load_data()
 st.title("Выбери свой подарок! 🎁")
 
 # Фильтруем доступные подарки
-available_gifts = [gift for gift in GIFTS if gift not in chosen_gifts]
+available_gifts = [
+    gift for gift in GIFTS if gift not in [entry["gift"] for entry in chosen_gifts]
+]
 
 if not available_gifts:
     st.warning("Все подарки уже выбраны! 😔")
 else:
+    # Ввод имени
+    user_name = st.text_input("Введите ваше имя:")
     # Выбор подарка
     selected_gift = st.selectbox("Выбери подарок:", available_gifts)
 
-    if st.button("Подтвердить выбор"):
-        # Сохраняем выбранный подарок
-        chosen_gifts.append(selected_gift)
+    if st.button("Подтвердить выбор", disabled=not user_name.strip()):
+        # Сохраняем имя и выбранный подарок
+        chosen_gifts.append({"name": user_name.strip(), "gift": selected_gift})
         save_data(chosen_gifts)
         # Показываем попап
         st.session_state.show_popup = True
         st.session_state.selected_gift = selected_gift
+        st.session_state.user_name = user_name.strip()
 
 # Показываем попап, если он активен
 if st.session_state.show_popup:
@@ -78,5 +85,5 @@ if st.session_state.show_popup:
 # Показываем список уже выбранных подарков
 if chosen_gifts:
     st.subheader("Уже выбраны:")
-    for gift in chosen_gifts:
-        st.write(f"- {gift}")
+    for entry in chosen_gifts:
+        st.write(f"- {entry['name']}: {entry['gift']}")
